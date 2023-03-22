@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button id="btn">发送</button>
+  <iframe id="frame2" src="2.html" frameborder="0"></iframe>
+</body>
+<script>
+  const btn = document.getElementById("btn");
+  btn.addEventListener('click', () => {
+    const frame2 = document.getElementById('frame2');
+    frame2.contentWindow.postMessage('give me message from parent', '*');
+  });
+
+  window.addEventListener('message', (e) => {
+    console.log(e, 14);
+  })
+</script>
+</html>
