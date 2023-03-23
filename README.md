@@ -1,103 +1,106 @@
-# TSDX User Guide
+# tonn-watermarkjs
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+[![GitHub license][license-image]][license-url]
+[![GitHub version][version-image]][version-url]
+[![GitHub stars][stars-image]][stars-url]
 
-> This TSDX setup is meant for developing libraries (not apps!) that can be published to NPM. If you’re looking to build a Node app, you could use `ts-node-dev`, plain `ts-node`, or simple `tsc`.
+[license-image]: https://img.shields.io/github/license/saucxs/watermark-dom.svg
+[license-url]: https://github.com/saucxs/watermark-dom/blob/master/LICENSE
+[version-image]: https://img.shields.io/github/package-json/v/WannTonn/tonn-watermarkjs.svg
+[version-url]: https://github.com/WannTonn/tonn-watermarkjs/blob/master/package.json
+[stars-image]: https://img.shields.io/github/stars/WannTonn/tonn-watermarkjs.svg
+[stars-url]: https://github.com/WannTonn/tonn-watermarkjs/stargazers
 
-> If you’re new to TypeScript, checkout [this handy cheatsheet](https://devhints.io/typescript)
 
-## Commands
+基于[watermark-dom](https://github.com/saucxs/watermark-dom)调整。感谢原作者的付出。
 
-TSDX scaffolds your new library inside `/src`.
+### 特性
+  - 借鉴 `watermark-dom` 库的功能的同时，用生成的canvas作为水印的`background-image`
+  - 配合typescript，在配置时带有提示
+  - 水印防篡改
 
-To run TSDX, use:
+### 如何使用
+1. npm安装
+```shell
+$ npm install tonn-watermarkjs
+```
+2. 引用依赖
+```javascript
+import Watermark from 'tonn-watermarkjs'
+或
+const Watermark = require('tonn-watermarkjs');
 
-```bash
-npm start # or yarn start
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+3. 在页面加载完成之后，调用init事件，以下用React来做示例
+```javascript
+import React, {useEffect} from 'react';
+import Watermark from 'tonn-watermarkjs';
 
-To do a one-off build, use `npm run build` or `yarn build`.
+/**
+ * @description 
+ */
 
-To run tests, use `npm test` or `yarn test`.
-
-## Configuration
-
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
-
-### Jest
-
-Jest tests are set up to run with `npm test` or `yarn test`.
-
-### Bundle Analysis
-
-[`size-limit`](https://github.com/ai/size-limit) is set up to calculate the real cost of your library with `npm run size` and visualize the bundle with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
-```
-
-### Rollup
-
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
+const WatermarkDemo: React.FC = () => {
+  useEffect(() => {
+    Watermark.init({
+      watermark_text: '一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十',
+      width: 400,
+      height: 400,
+      rotate: 45
+    })
+  }, []);
+  return (
+    <div>
+      watermark
+    </div>
+  )
 }
+export default WatermarkDemo;
 ```
+## 内置方法
+- init(settings)
+- reload(settings)
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+## 字段配置对照表(部分字段的功能待完善)
+```
+/** 挂载水印的id */
+  id: string;
+  /** 默认水印内容 */
+  watermark_text: string;
+  /** 水印起始x轴坐标 */
+  x?: number;
+  /** 水印起始y轴坐标 */
+  y?: number;
+  /** 水印行数 */
+  rows?: number;
+  /** 水印列数 */
+  cols?: number;
+  /** x轴间距 */
+  x_space?: number;
+  /** y轴间距 */
+  y_space?: number;
+  /** 水印字库 */
+  font?: string;
+  /** 字体颜色 */
+  font_color?: string;
+  /** 字体大小 */
+  font_size?: number;
+  /** 字体透明度 */
+  font_opciaty?: number;
+  /** 水印宽度 */
+  width?: number;
+  /** 水印高度 */
+  height?: number;
+  /** 水印倾斜角度 */
+  rotate?: number;
+  /** 水印总体宽度 */
+  parent_width?: number;
+  /** 水印总体高度 */
+  parent_height?: number;
+  /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
+  parent_node_id?: string | null;
+  /** 是否可以调整水印 */
+  mutable?: boolean;
 
-## Module Formats
-
-CJS, ESModules, and UMD module formats are supported.
-
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
-
-## Named Exports
-
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
-
-## Including Styles
-
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
-
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
-
-## Publishing to NPM
-
-We recommend using [np](https://github.com/sindresorhus/np).
+```
