@@ -9,8 +9,48 @@
 <body>
   <button id="btn">发送</button>
   <iframe id="frame2" src="2.html" frameborder="0"></iframe>
+  <canvas id="map"></canvas>
+  <div id="waterContainer">
+    <template id="waterTemplate">
+      <div id="waterMark"></div>
+    </template>
+  </div>
 </body>
+
+</script>
 <script>
+  CanvasRenderingContext2D.prototype.wrapText = function (text, x, y, maxWidth, lineHeight) {
+    if (typeof text != 'string' || typeof x != 'number' || typeof y != 'number') {
+        return;
+    }
+    var context = this;
+    var canvas = context.canvas;
+    
+    if (typeof maxWidth == 'undefined') {
+        maxWidth = (canvas && canvas.width) || 300;
+    }
+    if (typeof lineHeight == 'undefined') {
+        lineHeight = (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) || parseInt(window.getComputedStyle(document.body).lineHeight);
+    }
+    
+    // 字符分隔为数组
+    var arrText = text.split('');
+    var line = '';
+    
+    for (var n = 0; n < arrText.length; n++) {
+        var testLine = line + arrText[n];
+        var metrics = context.measureText(testLine);
+        var testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            context.fillText(line, x, y);
+            line = arrText[n];
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    context.fillText(line, x, y);
+};
   const btn = document.getElementById("btn");
   btn.addEventListener('click', () => {
     const frame2 = document.getElementById('frame2');
@@ -20,5 +60,22 @@
   window.addEventListener('message', (e) => {
     console.log(e, 14);
   })
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 300;
+  canvas.height = 200;
+  canvas.fillStyle = 'blue'
+  // ctx.fillRect(10, 10, canvas.width, canvas.height);
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#233';
+  ctx.font = '16px Arial';
+  //ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.rotate((45 * Math.PI) / 360);
+  ctx.translate(50, 0);
+  ctx.wrapText('一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十二三四五六七八九十二三四五六七八九十二三四五六七八九十二三四五六七八九十二三四五六七八九十', 0, 0, canvas.width - 50, 20);
+
+  // ctx.fillText('一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十', 0, canvas.height);
+  // ctx.globalAlpha = 1;
+  
 </script>
 </html>
