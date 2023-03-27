@@ -30,9 +30,9 @@ interface IWaterMark {
   /** 水印倾斜角度 */
   rotate?: number;
   /** 水印总体宽度 */
-  parent_width?: number;
+  content_width?: number;
   /** 水印总体高度 */
-  parent_height?: number;
+  content_height?: number;
   /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
   parent_node_id?: string | null;
   /** 是否可以调整水印 */
@@ -77,14 +77,15 @@ class waterMark {
     height: 100,
     /** 水印倾斜角度 */
     rotate: 15,
+
     /** 水印总体宽度 */
-    parent_width: 0,
+    content_width: 0,
     /** 水印总体高度 */
-    parent_height: 0,
+    content_height: 0,
     /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
     parent_node_id: null,
-    /** 是否可以调整水印 */
-    mutable: true,
+    /** 默认不允许调整水印，API不开放 */
+    mutable: false,
   };
   MutationObserver = window.MutationObserver;
   /** 初始化, 绑定事件 */
@@ -112,8 +113,6 @@ class waterMark {
     ) {
       return;
     }
-    // var context = this.get('ctx');
-    // var canvas = this.get('canvas');
 
     if (typeof maxWidth == 'undefined') {
       maxWidth = (canvas && canvas.width) || 300;
@@ -157,6 +156,7 @@ class waterMark {
     const rotate = this.get('rotate');
     const fillStyle = this.get('font_color');
     const opciaty = this.get('font_opciaty');
+    const content_width = this.get('content_width');
 
     canvas.height = height;
     canvas.width = width;
@@ -164,10 +164,20 @@ class waterMark {
     ctx.fillStyle = fillStyle;
     ctx.font = `${fontSize}px ${font}`;
     ctx.globalAlpha = opciaty;
-    ctx.rotate((rotate * Math.PI) / 180);
-    // ctx.fillText(text, 0, height / 2);
+    ctx.rotate(((rotate > 90 ? 1 : -1) * (rotate % 90) * Math.PI) / 180);
+
     ctx.translate(0, 0);
-    this.wrapText(canvas, ctx, text, 0, 0, width - 60, 20);
+    rotate > 90
+      ? this.wrapText(canvas, ctx, text, 50, 0, content_width || width - 20, 20)
+      : this.wrapText(
+          canvas,
+          ctx,
+          text,
+          0,
+          height / 2,
+          content_width || width - 20,
+          20
+        );
     this.set('canvas', canvas);
     this.set('ctx', ctx);
   }
@@ -251,15 +261,16 @@ class waterMark {
   /** 水印载体被修改，则删除div并重新绘制 */
   createDomObserver() {
     this.observer = new MutationObserver(() => {
-      this.removeMark()
+      this.removeMark();
+      this.renderMark();
     });
   }
   /** 手动更新水印 */
   reload(settings: IWaterMark) {
-    this.watermark = {...this.watermark, settings};
+    this.watermark = { ...this.watermark, settings };
     this.renderMark();
   }
-  
+
   constructor(settings: IWaterMark) {
     this.init(settings);
   }

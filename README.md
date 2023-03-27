@@ -95,12 +95,10 @@ export default WatermarkDemo;
   /** 水印倾斜角度 */
   rotate?: number;
   /** 水印总体宽度 */
-  parent_width?: number;
+  content_width?: number;
   /** 水印总体高度 */
-  parent_height?: number;
+  content_height?: number;
   /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
   parent_node_id?: string | null;
-  /** 是否可以调整水印 */
-  mutable?: boolean;
 
 ```
