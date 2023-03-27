@@ -14,11 +14,6 @@
 
 基于[watermark-dom](https://github.com/saucxs/watermark-dom)调整。感谢原作者的付出。
 
-### 特性
-  - 借鉴 `watermark-dom` 库的功能的同时，用生成的canvas作为水印的`background-image`
-  - 配合typescript，在配置时带有提示
-  - 水印防篡改
-
 ### 如何使用
 1. npm安装
 ```shell
@@ -68,18 +63,6 @@ export default WatermarkDemo;
   id: string;
   /** 默认水印内容 */
   watermark_text: string;
-  /** 水印起始x轴坐标 */
-  x?: number;
-  /** 水印起始y轴坐标 */
-  y?: number;
-  /** 水印行数 */
-  rows?: number;
-  /** 水印列数 */
-  cols?: number;
-  /** x轴间距 */
-  x_space?: number;
-  /** y轴间距 */
-  y_space?: number;
   /** 水印字库 */
   font?: string;
   /** 字体颜色 */
@@ -96,8 +79,6 @@ export default WatermarkDemo;
   rotate?: number;
   /** 水印总体宽度 */
   content_width?: number;
-  /** 水印总体高度 */
-  content_height?: number;
   /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
   parent_node_id?: string | null;
 
