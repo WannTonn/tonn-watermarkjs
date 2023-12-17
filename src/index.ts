@@ -1,20 +1,15 @@
 interface IWaterMark {
   /** 挂载水印的id */
   id: string;
+  /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
+  parent_node_id?: string | null;
   /** 默认水印内容 */
   watermark_text: string;
   /** 水印起始x轴坐标 */
   x?: number;
   /** 水印起始y轴坐标 */
   y?: number;
-  /** 水印行数 */
-  rows?: number;
-  /** 水印列数 */
-  cols?: number;
-  /** x轴间距 */
-  x_space?: number;
-  /** y轴间距 */
-  y_space?: number;
+
   /** 水印字库 */
   font?: string;
   /** 字体颜色 */
@@ -31,66 +26,54 @@ interface IWaterMark {
   rotate?: number;
   /** 水印总体宽度 */
   content_width?: number;
-  /** 水印总体高度 */
-  content_height?: number;
-  /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
-  parent_node_id?: string | null;
-  /** 是否可以调整水印 */
-  mutable?: boolean;
+  /** 水印层级 */
+  zIndex?: number;
 }
+/** 水印默认配置 */
+const initSettings = {
+  /** 挂载水印的id */
+  id: 'vm_div_id',
+  /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
+  parent_node_id: 'body',
+  /** 默认水印内容 */
+  watermark_text: '测试水印',
+  /** 水印起始x轴坐标 */
+  x: 0,
+  /** 水印起始y轴坐标 */
+  y: 0,
+  /** 水印字库 */
+  font: '微软雅黑',
+  /** 字体颜色 */
+  font_color: '#ddd',
+  /** 字体大小 */
+  font_size: 16,
+  /** 字体透明度 */
+  font_opciaty: 0.5,
+  /** 水印宽度 */
+  width: 100,
+  /** 水印高度 */
+  height: 100,
+  /** 水印倾斜角度 */
+  rotate: 15,
+  /** 水印总体宽度 */
+  content_width: 0,
+  /** 水印总体高度 */
+  content_height: 0,
+  /** 水印层级 */
+  zIndex: 99999
+};
 class waterMark {
   /** 水印配置 */
   watermark: any = {};
   observer: any;
   bodyObserver: any;
-  /** 强制移除标志 */
-  forceRemove = false;
-  /** 水印默认配置 */
-  initSettings = {
-    /** 挂载水印的id */
-    id: 'vm_div_id',
-    /** 默认水印内容 */
-    watermark_text: '测试水印',
-    /** 水印起始x轴坐标 */
-    x: 20,
-    /** 水印起始y轴坐标 */
-    y: 20,
-    /** 水印行数 */
-    rows: 5,
-    /** 水印列数 */
-    cols: 5,
-    /** x轴间距 */
-    x_space: 50,
-    /** y轴间距 */
-    y_space: 50,
-    /** 水印字库 */
-    font: '微软雅黑',
-    /** 字体颜色 */
-    font_color: '#ddd',
-    /** 字体大小 */
-    font_size: 16,
-    /** 字体透明度 */
-    font_opciaty: 0.5,
-    /** 水印宽度 */
-    width: 100,
-    /** 水印高度 */
-    height: 100,
-    /** 水印倾斜角度 */
-    rotate: 15,
+  reloadMark: any;
+  domInstance: any;
 
-    /** 水印总体宽度 */
-    content_width: 0,
-    /** 水印总体高度 */
-    content_height: 0,
-    /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
-    parent_node_id: null,
-    /** 默认不允许调整水印，API不开放 */
-    mutable: false,
-  };
   MutationObserver = window.MutationObserver;
   /** 初始化, 绑定事件 */
   init(settings: IWaterMark) {
-    this.watermark = { ...this.initSettings, ...settings };
+    this.watermark = { ...initSettings, ...settings };
     // 初始化body和水印载体div的监听
     this.createObserver();
     this.createCanvas();
@@ -158,6 +141,8 @@ class waterMark {
     const opciaty = this.get('font_opciaty');
     const content_width = this.get('content_width');
 
+    const startX = this.get('x');
+    const startY = this.get('y');
     canvas.height = height;
     canvas.width = width;
 
@@ -167,23 +152,23 @@ class waterMark {
     ctx.rotate(((rotate > 90 ? 1 : -1) * (rotate % 90) * Math.PI) / 180);
 
     ctx.translate(0, 0);
-    rotate > 90
-      ? this.wrapText(canvas, ctx, text, 50, 0, content_width || width - 20, 20)
-      : this.wrapText(
-          canvas,
-          ctx,
-          text,
-          0,
-          height / 2,
-          content_width || width - 20,
-          20
-        );
+    this.wrapText(
+      canvas,
+      ctx,
+      text,
+      startX,
+      startY,
+      content_width || width - 20,
+      20
+    );
     this.set('canvas', canvas);
     this.set('ctx', ctx);
   }
   /** 渲染水印 */
   renderMark() {
+    this.createCanvas();
     const canvas = this.get('canvas');
+    const zIndex =  this.get('zIndex');
     const image = canvas.toDataURL();
     const parentNode = document.querySelector(
       this.get('parent_node_id') || 'body'
@@ -201,18 +186,21 @@ class waterMark {
         bottom: 0; 
         right: 0;
         pointer-events: none;
-        z-index: 99999
+        z-index: ${zIndex}
       `
     );
     this.set('dom', dom);
+    this.domInstance = dom;
     parentNode?.appendChild(dom);
     this.observe();
   }
   /** 清除水印 */
   removeMark() {
-    const body = document.querySelector(this.get('parent_node_id') || 'body');
+    const parentNode = document.querySelector(
+      this.get('parent_node_id') || 'body'
+    );
     const dom = this.get('dom');
-    body?.removeChild(dom);
+    dom && parentNode?.removeChild(dom);
     this.set('dom', null);
   }
   set(key: string, value: any) {
@@ -254,6 +242,7 @@ class waterMark {
         mutationList[0]?.removedNodes?.length &&
         mutationList[0]?.removedNodes[0]?.['id'] === this.get('id')
       ) {
+        /** 监听到水印的改动，在删除水印后重新执行绘制 */
         this.renderMark();
       }
     });
@@ -262,17 +251,25 @@ class waterMark {
   createDomObserver() {
     this.observer = new MutationObserver(() => {
       this.removeMark();
-      this.renderMark();
     });
-  }
-  /** 手动更新水印 */
-  reload(settings: IWaterMark) {
-    this.watermark = { ...this.watermark, settings };
-    this.renderMark();
   }
 
   constructor(settings: IWaterMark) {
     this.init(settings);
+
+    console.log(this, 259);
+    
   }
 }
+/** 
+ * @description hooks用法
+ * @params options 水印配置
+ * @returns set 
+ */
+export const useWaterMark = (options: IWaterMark) => {
+  const waterMarInstance = new waterMark(options);
+  return {
+    waterMark: waterMarInstance,
+  }
+};
 export default waterMark;
