@@ -17,7 +17,7 @@ interface IWaterMark {
   /** 字体大小 */
   font_size?: number;
   /** 字体透明度 */
-  font_opciaty?: number;
+  font_opacity?: number;
   /** 水印宽度 */
   width?: number;
   /** 水印高度 */
@@ -48,7 +48,7 @@ const initSettings = {
   /** 字体大小 */
   font_size: 16,
   /** 字体透明度 */
-  font_opciaty: 0.5,
+  font_opacity: 0.5,
   /** 水印宽度 */
   width: 100,
   /** 水印高度 */
@@ -138,7 +138,7 @@ class waterMark {
 
     const rotate = this.get('rotate');
     const fillStyle = this.get('font_color');
-    const opciaty = this.get('font_opciaty');
+    const opciaty = this.get('font_opacity');
     const content_width = this.get('content_width');
 
     const startX = this.get('x');
@@ -256,9 +256,6 @@ class waterMark {
 
   constructor(settings: IWaterMark) {
     this.init(settings);
-
-    console.log(this, 259);
-    
   }
 }
 /** 

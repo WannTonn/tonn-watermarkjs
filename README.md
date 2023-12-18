@@ -53,9 +53,6 @@ const WatermarkDemo: React.FC = () => {
 }
 export default WatermarkDemo;
 ```
-## 内置方法
-- init(settings)
-- reload(settings)
 
 ## 字段配置对照表(部分字段的功能待完善)
 ```
@@ -70,7 +67,7 @@ export default WatermarkDemo;
   /** 字体大小 */
   font_size?: number;
   /** 字体透明度 */
-  font_opciaty?: number;
+  font_opacity?: number;
   /** 水印宽度 */
   width?: number;
   /** 水印高度 */
