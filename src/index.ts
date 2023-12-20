@@ -1,6 +1,6 @@
-interface IWaterMark {
+export interface IWaterMark {
   /** 挂载水印的id */
-  id: string;
+  id?: string;
   /** 水印挂载的父元素的element id, 不配置则挂载在body上 */
   parent_node_id?: string | null;
   /** 默认水印内容 */
@@ -9,7 +9,6 @@ interface IWaterMark {
   x?: number;
   /** 水印起始y轴坐标 */
   y?: number;
-
   /** 水印字库 */
   font?: string;
   /** 字体颜色 */
@@ -65,35 +64,27 @@ const initSettings = {
 class waterMark {
   /** 水印配置 */
   watermark: any = {};
+  initWatermark: any;
   observer: any;
   bodyObserver: any;
-  reloadMark: any;
+  resetMark: any;
   domInstance: any;
-
   MutationObserver = window.MutationObserver;
   /** 初始化, 绑定事件 */
   init(settings: IWaterMark) {
     this.watermark = { ...initSettings, ...settings };
-    // 初始化body和水印载体div的监听
-    this.createObserver();
-    this.createCanvas();
-    this.renderMark();
+    if (this.domInstance) {
+      this.removeMark();
+    } else {
+      // 初始化body和水印载体div的监听
+      this.createObserver();
+      this.createCanvas();
+      this.renderMark();
+    }
   }
   /** 方法来自张鑫旭的blog： https://www.zhangxinxu.com/wordpress/2018/02/canvas-text-break-line-letter-spacing-vertical/ */
-  wrapText(
-    canvas: HTMLCanvasElement,
-    context: CanvasRenderingContext2D,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth: number,
-    lineHeight: number
-  ) {
-    if (
-      typeof text != 'string' ||
-      typeof x != 'number' ||
-      typeof y != 'number'
-    ) {
+  wrapText(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
+    if (typeof text != 'string' || typeof x != 'number' || typeof y != 'number') {
       return;
     }
 
@@ -101,19 +92,17 @@ class waterMark {
       maxWidth = (canvas && canvas.width) || 300;
     }
     if (typeof lineHeight == 'undefined') {
-      lineHeight =
-        (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) ||
-        parseInt(window.getComputedStyle(document.body).lineHeight);
+      lineHeight = (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) || parseInt(window.getComputedStyle(document.body).lineHeight);
     }
 
     // 字符分隔为数组
-    var arrText = text.split('');
-    var line = '';
+    const arrText = text.split('');
+    let line = '';
 
-    for (var n = 0; n < arrText.length; n++) {
-      var testLine = line + arrText[n];
-      var metrics = context.measureText(testLine);
-      var testWidth = metrics.width;
+    for (let n = 0; n < arrText.length; n++) {
+      const testLine = line + arrText[n];
+      const metrics = context.measureText(testLine);
+      const testWidth = metrics.width;
       if (testWidth > maxWidth && n > 0) {
         context.fillText(line, x, y);
         line = arrText[n];
@@ -127,9 +116,7 @@ class waterMark {
   /** 创建canvas */
   createCanvas() {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
-    const ctx: CanvasRenderingContext2D = canvas.getContext(
-      '2d'
-    ) as CanvasRenderingContext2D;
+    const ctx: CanvasRenderingContext2D = canvas.getContext('2d') as CanvasRenderingContext2D;
     const height = this.get('height');
     const width = this.get('width');
     const font = this.get('font');
@@ -152,15 +139,7 @@ class waterMark {
     ctx.rotate(((rotate > 90 ? 1 : -1) * (rotate % 90) * Math.PI) / 180);
 
     ctx.translate(0, 0);
-    this.wrapText(
-      canvas,
-      ctx,
-      text,
-      startX,
-      startY,
-      content_width || width - 20,
-      20
-    );
+    this.wrapText(canvas, ctx, text, startX, startY, content_width || width - 20, 20);
     this.set('canvas', canvas);
     this.set('ctx', ctx);
   }
@@ -168,22 +147,20 @@ class waterMark {
   renderMark() {
     this.createCanvas();
     const canvas = this.get('canvas');
-    const zIndex =  this.get('zIndex');
+    const zIndex = this.get('zIndex');
     const image = canvas.toDataURL();
-    const parentNode = document.querySelector(
-      this.get('parent_node_id') || 'body'
-    );
+    const parentNode = document.querySelector(this.get('parent_node_id') || 'body');
     const dom = document.createElement('div');
     dom.setAttribute('id', this.get('id'));
     dom.setAttribute(
       'style',
       `
-        background-image:url(${image}); 
-        height: 100%; 
-        position: fixed; 
-        left: 0; 
-        top: 0; 
-        bottom: 0; 
+        background-image:url(${image});
+        height: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
         right: 0;
         pointer-events: none;
         z-index: ${zIndex}
@@ -193,14 +170,15 @@ class waterMark {
     this.domInstance = dom;
     parentNode?.appendChild(dom);
     this.observe();
+
   }
   /** 清除水印 */
   removeMark() {
-    const parentNode = document.querySelector(
-      this.get('parent_node_id') || 'body'
-    );
-    const dom = this.get('dom');
-    dom && parentNode?.removeChild(dom);
+    const watermarks = document.querySelectorAll('#' + this.get('id'));
+    const parentNode = document.querySelector(this.get('parent_node_id') || 'body');
+    watermarks.forEach((e) => {
+      parentNode.removeChild(e);
+    });
     this.set('dom', null);
   }
   set(key: string, value: any) {
@@ -220,14 +198,14 @@ class waterMark {
     this.observer.observe(dom, {
       childList: true,
       attributes: true,
-      characterData: true,
+      characterData: true
     });
   }
   /** 监听body */
   bodyObserve() {
     const body = document.querySelector('body');
     this.bodyObserver.observe(body, {
-      childList: true,
+      childList: true
     });
   }
   /** 创建监听 */
@@ -237,11 +215,9 @@ class waterMark {
   }
   /** 创建body监听 */
   createBodyObserver() {
+    this.bodyObserver = null;
     this.bodyObserver = new MutationObserver((mutationList: any) => {
-      if (
-        mutationList[0]?.removedNodes?.length &&
-        mutationList[0]?.removedNodes[0]?.['id'] === this.get('id')
-      ) {
+      if (mutationList[0]?.removedNodes?.length && mutationList[0]?.removedNodes[0]?.['id'] === this.get('id')) {
         /** 监听到水印的改动，在删除水印后重新执行绘制 */
         this.renderMark();
       }
@@ -249,24 +225,30 @@ class waterMark {
   }
   /** 水印载体被修改，则删除div并重新绘制 */
   createDomObserver() {
+    this.observer = undefined;
     this.observer = new MutationObserver(() => {
       this.removeMark();
     });
   }
-
-  constructor(settings: IWaterMark) {
-    this.init(settings);
+  resetMarkFn(settings?: IWaterMark) {
+    this.removeMark();
+    this.init({ ...this.watermark, ...settings });
+  }
+  constructor() {
+    this.initWatermark = this.init.bind(this);
+    this.resetMark = this.resetMarkFn.bind(this);
   }
 }
-/** 
+/**
  * @description hooks用法
  * @params options 水印配置
- * @returns set 
+ * @returns
  */
-export const useWaterMark = (options: IWaterMark) => {
-  const waterMarInstance = new waterMark(options);
+export const useWaterMark = () => {
+  const waterMarInstance = new waterMark();
+
   return {
-    waterMark: waterMarInstance,
-  }
+    init: waterMarInstance.resetMark
+  };
 };
 export default waterMark;
