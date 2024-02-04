@@ -59,7 +59,7 @@ const initSettings = {
   /** 水印总体高度 */
   content_height: 0,
   /** 水印层级 */
-  zIndex: 99999
+  zIndex: 99999999
 };
 class waterMark {
   /** 水印配置 */
@@ -155,15 +155,16 @@ class waterMark {
     dom.setAttribute(
       'style',
       `
-        background-image:url(${image});
-        height: 100%;
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        right: 0;
-        pointer-events: none;
-        z-index: ${zIndex}
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        height: 100% !important;
+        background-image:url(${image}) !important;
+        pointer-events: none !important;
+        z-index: ${zIndex} !important;
       `
     );
     this.set('dom', dom);
@@ -174,6 +175,7 @@ class waterMark {
   }
   /** 清除水印 */
   removeMark() {
+    this.removeObserver();
     const watermarks = document.querySelectorAll('#' + this.get('id'));
     const parentNode = document.querySelector(this.get('parent_node_id') || 'body');
     watermarks.forEach((e) => {
@@ -213,12 +215,17 @@ class waterMark {
     this.createDomObserver();
     this.createBodyObserver();
   }
+  /** 移除监听 */
+  removeObserver() {
+    this.observer?.unobserve?.();
+    this.bodyObserver?.unobserve?.();
+  }
   /** 创建body监听 */
   createBodyObserver() {
-    this.bodyObserver = null;
+    this.bodyObserver = undefined;
     this.bodyObserver = new MutationObserver((mutationList: any) => {
-      if (mutationList[0]?.removedNodes?.length && mutationList[0]?.removedNodes[0]?.['id'] === this.get('id')) {
-        /** 监听到水印的改动，在删除水印后重新执行绘制 */
+      /** 监听到水印的改动，在删除水印后重新执行绘制 */
+      if (mutationList[0]?.removedNodes?.length && mutationList[0]?.removedNodes[0]?.['id'] === this.get('id')) {  
         this.renderMark();
       }
     });
